@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Kyle Soccer V2</title>
+
+<style>
+*{box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
+body{
+ margin:0;background:#07170d;color:white;
+ font-family:-apple-system,BlinkMacSystemFont,Arial;
+ text-align:center;overflow:hidden
+}
+#header{height:74px;padding-top:4px}
+#title{font-size:18px;font-weight:900}
+#score{font-size:26px;font-weight:900}
+#timer{font-size:14px}
+
+#field{
+ position:relative;width:94vw;height:56vh;margin:auto;
+ background:#42a653;border:5px solid white;
+ border-radius:20px;overflow:hidden
+}
+.stripe{position:absolute;left:0;width:100%;height:16.7%;background:#ffffff0b}
+.s1{top:0}.s2{top:33.3%}.s3{top:66.6%}
+#halfLine{position:absolute;top:50%;width:100%;height:3px;background:white}
+#circle{
+ position:absolute;left:50%;top:50%;width:105px;height:105px;
+ border:3px solid white;border-radius:50%;transform:translate(-50%,-50%)
+}
+#box{
+ position:absolute;top:0;left:24%;width:52%;height:24%;
+ border-left:3px solid white;border-right:3px solid white;border-bottom:3px solid white
+}
+#smallBox{
+ position:absolute;top:0;left:35%;width:30%;height:11%;
+ border-left:3px solid white;border-right:3px solid white;border-bottom:3px solid white
+}
+#goal{
+ position:absolute;top:0;left:35%;width:30%;height:24px;
+ border-left:6px solid white;border-right:6px solid white;border-bottom:6px solid white
+}
+
+/* PLAYERS */
+
+.person{
+ position:absolute;width:42px;height:48px;
+ transform:translate(-50%,-50%);
+}
+.head{
+ position:absolute;left:12px;width:18px;height:18px;
+ background:#222;border:2px solid white;border-radius:50%
+}
+.body{
+ position:absolute;top:16px;left:6px;width:30px;height:27px;
+ border:2px solid white;border-radius:8px
+}
+.blue{background:#1477dd}
+.red{background:#ef3340}
+.active .body{box-shadow:0 0 0 4px #ffe600}
+
+#player{z-index:8}
+#mate{z-index:7}
+#cpu{z-index:7}
+
+#keeper{
+ position:absolute;width:40px;height:40px;
+ transform:translate(-50%,-50%);z-index:6
+}
+#keeper .body{background:#ffd60a;border-color:#111}
+
+#ball{
+ position:absolute;width:18px;height:18px;
+ border-radius:50%;background:white;border:3px solid #111;
+ transform:translate(-50%,-50%);z-index:10
+}
+
+#message{
+ position:absolute;top:42%;width:100%;
+ font-size:34px;font-weight:1000;color:white;
+ text-shadow:0 3px 5px #000;z-index:20;pointer-events:none
+}
+
+/* CONTROLS */
+
+#controls{position:relative;height:225px}
+#dpad{position:absolute;left:8px;top:5px;width:180px;height:125px}
+.btn{
+ position:absolute;width:56px;height:56px;border:0;
+ border-radius:17px;background:white;font-size:24px;
+ box-shadow:0 3px 8px #0006
+}
+.btn:active{transform:scale(.88)}
+#up{left:61px;top:0}
+#left{left:0;top:58px}
+#down{left:61px;top:58px}
+#right{left:122px;top:58px}
+
+.action{
+ position:absolute;border:0;color:white;font-weight:900;
+ box-shadow:0 3px 8px #0006
+}
+#shoot{
+ right:14px;top:10px;width:100px;height:66px;
+ border-radius:50%;background:#ff3b30;font-size:17px
+}
+#pass{
+ right:124px;top:15px;width:96px;height:55px;
+ border-radius:15px;background:#1689e8;font-size:16px
+}
+#skill{
+ right:124px;top:125px;width:96px;height:48px;
+ border-radius:15px;background:#9146ff
+}
+#sprint{
+ right:14px;top:125px;width:100px;height:48px;
+ border-radius:15px;background:#16a766
+}
+.action:disabled{opacity:.35}
+</style>
+</head>
+
+<body>
+
+<div id="header">
+ <div id="title">⚽ KYLE SOCCER V2</div>
+ <div id="score">YOU 0 : 0 CPU</div>
+ <div id="timer">⏱️ 60 SECONDS LEFT</div>
+</div>
+
+<div id="field">
+ <div class="stripe s1"></div>
+ <div class="stripe s2"></div>
+ <div class="stripe s3"></div>
+
+ <div id="goal"></div>
+ <div id="box"></div>
+ <div id="smallBox"></div>
+ <div id="halfLine"></div>
+ <div id="circle"></div>
+
+ <div id="keeper" class="person">
+  <div class="head"></div><div class="body"></div>
+ </div>
+
+ <div id="cpu" class="person">
+  <div class="head"></div><div class="body red"></div>
+ </div>
+
+ <div id="player" class="person active">
+  <div class="head"></div><div class="body blue"></div>
+ </div>
+
+ <div id="mate" class="person">
+  <div class="head"></div><div class="body blue"></div>
+ </div>
+
+ <div id="ball"></div>
+ <div id="message"></div>
+</div>
+
+<div id="controls">
+ <div id="dpad">
+  <button class="btn" id="up">▲</button>
+  <button class="btn" id="left">◀</button>
+  <button class="btn" id="down">▼</button>
+  <button class="btn" id="right">▶</button>
+ </div>
+
+ <button class="action" id="pass">🤝 PASS</button>
+ <button class="action" id="shoot">⚽<br>SHOOT</button>
+ <button class="action" id="skill">✨ SKILL</button>
+ <button class="action" id="sprint">💨 SPRINT</button>
+</div>
+
+<script>
+const player=document.getElementById("player");
+const mate=document.getElementById("mate");
+const cpu=document.getElementById("cpu");
+const keeper=document.getElementById("keeper");
+const ball=document.getElementById("ball");
+const message=document.getElementById("message");
+const score=document.getElementById("score");
+const timer=document.getElementById("timer");
+
+let p={x:48,y:82};
+let m={x:70,y:62};
+let c={x:30,y:42};
+
+let keeperX=50;
+
+let ballX=53,ballY=82;
+let ballVX=0,ballVY=0;
+
+let controlled="player";
+let owner="player";
+let targetReceiver=null;
+
+let moveX=0,moveY=0;
+let ballMoving=false;
+
+let you=0,cpuScore=0;
+let seconds=60;
+
+let gameOver=false;
+let resetting=false;
+let sprinting=false;
+let skillReady=true;
+let sprintReady=true;
+let cpuConfused=0;
+
+function activeObj(){
+ return controlled==="player" ? p : m;
+}
+
+function ownerObj(){
+ if(owner==="player") return p;
+ if(owner==="mate") return m;
+ return null;
+}
+
+function draw(){
+ player.style.left=p.x+"%";
+ player.style.top=p.y+"%";
+
+ mate.style.left=m.x+"%";
+ mate.style.top=m.y+"%";
+
+ cpu.style.left=c.x+"%";
+ cpu.style.top=c.y+"%";
+
+ keeper.style.left=keeperX+"%";
+ keeper.style.top="6%";
+
+ if(owner){
+   const o=ownerObj();
+   ballX=o.x+5;
+   ballY=o.y+5;
+ }
+
+ ball.style.left=ballX+"%";
+ ball.style.top=ballY+"%";
+
+ player.classList.toggle("active",controlled==="player");
+ mate.classList.toggle("active",controlled==="mate");
+}
+
+/* MOVEMENT */
+
+function setup(id,x,y){
+ const b=document.getElementById(id);
+
+ b.addEventListener("touchstart",e=>{
+   e.preventDefault();
+   moveX=x;moveY=y;
+ },{passive:false});
+
+ b.addEventListener("touchend",e=>{
+   e.preventDefault();
+   moveX=0;moveY=0;
+ },{passive:false});
+
+ b.addEventListener("touchcancel",()=>{
+   moveX=0;moveY=0;
+ });
+}
+
+setup("up",0,-1);
+setup("down",0,1);
+setup("left",-1,0);
+setup("right",1,0);
+
+function updateControlled(){
+ if(gameOver||resetting)return;
+
+ const a=activeObj();
+ const speed=sprinting ? .58 : .36;
+
+ a.x+=moveX*speed;
+ a.y+=moveY*speed;
+
+ a.x=Math.max(4,Math.min(96,a.x));
+ a.y=Math.max(15,Math.min(91,a.y));
+}
+
+/* TEAMMATE AI */
+
+function updateMateAI(){
+ if(gameOver||resetting)return;
+
+ const teammate=controlled==="player" ? m : p;
+ const active=activeObj();
+
+ /* Run slightly ahead and away from CPU */
+ let targetX;
+
+ if(c.x<active.x){
+   targetX=Math.min(86,active.x+20);
+ }else{
+   targetX=Math.max(14,active.x-20);
+ }
+
+ let targetY=Math.max(27,active.y-18);
+
+ let dx=targetX-teammate.x;
+ let dy=targetY-teammate.y;
+ let d=Math.sqrt(dx*dx+dy*dy);
+
+ if(d>2){
+   teammate.x+=(dx/d)*.10;
+   teammate.y+=(dy/d)*.10;
+ }
+}
+
+/* CPU DEFENDER */
+
+function updateCPU(){
+ if(gameOver||resetting)return;
+
+ let target;
+
+ if(owner){
+   target=ownerObj();
+ }else{
+   target={x:ballX,y:ballY};
+ }
+
+ let dx=target.x-c.x;
+ let dy=target.y-c.y;
+ let d=Math.sqrt(dx*dx+dy*dy);
+
+ let speed=.17;
+
+ if(cpuConfused>0){
+   speed=.035;
+   cpuConfused--;
+ }
+
+ if(d>1){
+   c.x+=(dx/d)*speed;
+   c.y+=(dy/d)*speed;
+ }
+
+ c.x=Math.max(5,Math.min(95,c.x));
+ c.y=Math.max(16,Math.min(87,c.y));
+
+ /* TACKLE BALL OWNER */
+
+ if(owner && d<3.7 && cpuConfused<=0){
+   owner=null;
+   message.innerHTML="💥 TACKLED!";
+   setTimeout(resetRound,550);
+ }
+}
+
+/* KEEPER */
+
+function updateKeeper(){
+ if(gameOver||resetting)return;
+
+ let targetX=owner ? ownerObj().x : ballX;
+
+ if(targetX>keeperX+2)keeperX+=.10;
+ if(targetX<keeperX-2)keeperX-=.10;
+
+ keeperX=Math.max(37,Math.min(63,keeperX));
+}
+
+/* PASS */
+
+function passBall(){
+ if(!owner||ballMoving||gameOver||resetting)return;
+
+ const from=ownerObj();
+
+ if(owner==="player"){
+   targetReceiver="mate";
+ }else{
+   targetReceiver="player";
+ }
+
+ const target=
+ targetReceiver==="mate" ? m : p;
+
+ owner=null;
+ ballMoving=true;
+
+ ballX=from.x+4;
+ ballY=from.y;
+
+ const dx=target.x-ballX;
+ const dy=target.y-ballY;
+ const d=Math.sqrt(dx*dx+dy*dy);
+
+ ballVX=(dx/d)*1.05;
+ ballVY=(dy/d)*1.05;
+
+ message.innerHTML="🤝 PASS!";
+}
+
+document.getElementById("pass")
+.addEventListener("touchstart",e=>{
+ e.preventDefault();passBall();
+},{passive:false});
+
+/* SHOOT */
+
+function shoot(){
+ if(!owner||ballMoving||gameOver||resetting)return;
+
+ const from=ownerObj();
+
+ owner=null;
+ targetReceiver=null;
+ ballMoving=true;
+
+ ballX=from.x+4;
+ ballY=from.y;
+
+ let targetX=from.x;
+
+ if(targetX<38)targetX=39;
+ if(targetX>62)targetX=61;
+
+ ballVX=(targetX-ballX)/35;
+ ballVY=-1.35;
+}
+
+document.getElementById("shoot")
+.addEventListener("touchstart",e=>{
+ e.preventDefault();shoot();
+},{passive:false});
+
+/* BALL */
+
+function updateBall(){
+ if(owner||!ballMoving||gameOver||resetting)return;
+
+ ballX+=ballVX;
+ ballY+=ballVY;
+
+ /* CPU INTERCEPTION */
+
+ let cdx=ballX-c.x;
+ let cdy=ballY-c.y;
+
+ if(Math.sqrt(cdx*cdx+cdy*cdy)<3.2){
+   ballMoving=false;
+   message.innerHTML="🔴 INTERCEPTED!";
+   setTimeout(resetRound,600);
+   return;
+ }
+
+ /* PASS RECEPTION */
+
+ if(targetReceiver){
+   const receiver=
+   targetReceiver==="mate" ? m : p;
+
+   let dx=ballX-receiver.x;
+   let dy=ballY-receiver.y;
+
+   if(Math.sqrt(dx*dx+dy*dy)<4){
+     owner=targetReceiver;
+     controlled=targetReceiver;
+     targetReceiver=null;
+     ballMoving=false;
+     message.innerHTML="✅ RECEIVED!";
+
+     setTimeout(()=>message.innerHTML="",250);
+     return;
+   }
+ }
+
+ /* KEEPER SAVE */
+
+ if(
+   !targetReceiver &&
+   ballY<14 &&
+   ballY>4 &&
+   Math.abs(ballX-keeperX)<5
+ ){
+   ballMoving=false;
+   message.innerHTML="🧤 SAVE!";
+   setTimeout(resetRound,650);
+   return;
+ }
+
+ /* GOAL */
+
+ if(
+   !targetReceiver &&
+   ballY<=4 &&
+   ballX>35 &&
+   ballX<65
+ ){
+   ballMoving=false;
+   you++;
+   updateScore();
+
+   message.innerHTML="⚽ GOOOOAL! 🎉";
+
+   setTimeout(resetRound,1000);
+   return;
+ }
+
+ if(ballY<-3||ballX<0||ballX>100){
+   ballMoving=false;
+   message.innerHTML="💨 OUT!";
+   setTimeout(resetRound,550);
+ }
+}
+
+/* SKILL */
+
+function skill(){
+ if(!owner||!skillReady||gameOver||resetting)return;
+
+ skillReady=false;
+ document.getElementById("skill").disabled=true;
+
+ const a=ownerObj();
+
+ let direction=c.x<=a.x ? 1 : -1;
+
+ a.x+=direction*9;
+ a.x=Math.max(6,Math.min(94,a.x));
+
+ cpuConfused=40;
+
+ const el=owner==="player" ? player : mate;
+
+ el.style.transition="transform .3s";
+ el.style.transform="translate(-50%,-50%) rotate(360deg)";
+
+ message.innerHTML="✨ SKILL!";
+
+ setTimeout(()=>{
+   el.style.transform="translate(-50%,-50%)";
+   message.innerHTML="";
+ },330);
+
+ setTimeout(()=>{
+   skillReady=true;
+   document.getElementById("skill").disabled=false;
+ },1800);
+}
+
+document.getElementById("skill")
+.addEventListener("touchstart",e=>{
+ e.preventDefault();skill();
+},{passive:false});
+
+/* SPRINT */
+
+function sprint(){
+ if(!sprintReady||gameOver||resetting)return;
+
+ sprintReady=false;
+ sprinting=true;
+
+ document.getElementById("sprint").disabled=true;
+ message.innerHTML="💨 SPRINT!";
+
+ setTimeout(()=>{
+   sprinting=false;
+   message.innerHTML="";
+ },700);
+
+ setTimeout(()=>{
+   sprintReady=true;
+   document.getElementById("sprint").disabled=false;
+ },2000);
+}
+
+document.getElementById("sprint")
+.addEventListener("touchstart",e=>{
+ e.preventDefault();sprint();
+},{passive:false});
+
+function updateScore(){
+ score.innerHTML="YOU "+you+" : "+cpuScore+" CPU";
+}
+
+/* RESET */
+
+function resetRound(){
+ if(gameOver)return;
+
+ resetting=true;
+
+ p={x:42,y:82};
+ m={x:68,y:65};
+ c={x:30,y:42};
+
+ keeperX=50;
+
+ controlled="player";
+ owner="player";
+ targetReceiver=null;
+
+ ballMoving=false;
+ ballVX=0;
+ ballVY=0;
+
+ moveX=0;
+ moveY=0;
+
+ setTimeout(()=>{
+   resetting=false;
+   message.innerHTML="";
+ },250);
+}
+
+/* TIMER */
+
+const clock=setInterval(()=>{
+ if(gameOver)return;
+
+ seconds--;
+
+ timer.innerHTML="⏱️ "+seconds+" SECONDS LEFT";
+
+ if(seconds<=0){
+   gameOver=true;
+   clearInterval(clock);
+
+   if(you>cpuScore)message.innerHTML="🏆 YOU WIN!";
+   else if(you<cpuScore)message.innerHTML="🔴 CPU WINS!";
+   else message.innerHTML="🤝 DRAW!";
+ }
+},1000);
+
+/* LOOP */
+
+function loop(){
+ updateControlled();
+ updateMateAI();
+ updateCPU();
+ updateKeeper();
+ updateBall();
+ draw();
+
+ requestAnimationFrame(loop);
+}
+
+draw();
+loop();
+
+</script>
+</body>
+</html>
