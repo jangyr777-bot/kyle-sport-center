@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Kyle Baseball V7.4</title>
+
+<style>
+*{box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}
+body{margin:0;background:#061009;color:white;font-family:Arial,sans-serif;text-align:center;overflow:hidden}
+
+#header{height:82px}
+#title{font-size:15px;font-weight:900}
+#score{font-size:21px;font-weight:900}
+#info,#count{font-size:12px;font-weight:800}
+
+#stadium{
+ position:relative;
+ width:96vw;
+ height:55vh;
+ margin:auto;
+ overflow:hidden;
+ background:radial-gradient(ellipse at 50% 92%,
+ #31954d 0%,#31954d 40%,#287f43 41%,#287f43 59%,#1c6835 60%,#1c6835 100%);
+ border:4px solid white;
+ border-top:9px solid #174c2b;
+ border-radius:48% 48% 18px 18px;
+}
+
+#wall{
+ position:absolute;top:3px;width:100%;
+ display:flex;justify-content:space-around;
+ color:#ffe16b;font-size:10px;font-weight:900;
+}
+
+#lineL,#lineR{
+ position:absolute;top:92%;
+ width:65%;height:3px;background:white;
+}
+#lineL{left:50%;transform-origin:left;transform:rotate(-58deg)}
+#lineR{right:50%;transform-origin:right;transform:rotate(58deg)}
+
+#dirt{
+ position:absolute;left:50%;top:73%;
+ width:195px;height:195px;
+ background:#b97943;
+ transform:translate(-50%,-50%) rotate(45deg);
+ border-radius:18px;
+}
+
+#grass{
+ position:absolute;left:50%;top:73%;
+ width:128px;height:128px;
+ background:#31954d;
+ transform:translate(-50%,-50%) rotate(45deg);
+}
+
+.base{
+ position:absolute;
+ width:18px;height:18px;
+ background:white;
+ transform:translate(-50%,-50%) rotate(45deg);
+ z-index:7;
+}
+
+#home{left:50%;top:92%}
+#first{left:74%;top:73%}
+#second{left:50%;top:53%}
+#third{left:26%;top:73%}
+
+.player{
+ position:absolute;
+ width:30px;height:30px;
+ border-radius:50%;
+ border:3px solid white;
+ transform:translate(-50%,-50%);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:10px;
+ font-weight:900;
+ z-index:15;
+}
+
+.red{background:#ef3340}
+.blue{background:#1477dd}
+
+.player.selected{
+ border-color:#ffd60a;
+ box-shadow:0 0 0 4px #ffd60a88,0 0 15px #ffd60a;
+}
+
+.player.hasball{
+ box-shadow:0 0 0 4px white,0 0 17px white;
+}
+
+#userRunner,#cpuRunner{
+ width:34px;height:34px;font-size:17px;
+}
+
+#ball{
+ position:absolute;
+ width:13px;height:13px;
+ border-radius:50%;
+ background:white;
+ border:2px solid #111;
+ transform:translate(-50%,-50%);
+ z-index:30;
+}
+
+#landing{
+ display:none;
+ position:absolute;
+ width:28px;height:28px;
+ border:3px dashed white;
+ border-radius:50%;
+ transform:translate(-50%,-50%);
+ opacity:.65;
+}
+
+#message{
+ position:absolute;
+ top:37%;
+ width:100%;
+ font-size:25px;
+ font-weight:900;
+ text-shadow:0 4px 6px #000;
+ z-index:45;
+ pointer-events:none;
+}
+
+#sub{
+ position:absolute;
+ top:47%;
+ width:100%;
+ font-size:13px;
+ font-weight:900;
+ text-shadow:0 3px 5px #000;
+ z-index:45;
+ pointer-events:none;
+}
+
+#distanceBox{
+ display:none;
+ position:absolute;
+ top:7px;
+ left:50%;
+ transform:translateX(-50%);
+ background:#000c;
+ border:2px solid white;
+ border-radius:11px;
+ padding:4px 10px;
+ font-weight:900;
+ z-index:50;
+}
+
+#safeMeter{
+ display:none;
+ position:absolute;
+ left:50%;
+ bottom:7px;
+ transform:translateX(-50%);
+ width:180px;
+ background:#000d;
+ border:2px solid white;
+ border-radius:10px;
+ padding:5px;
+ z-index:50;
+}
+
+#safeText{font-size:11px;font-weight:900}
+#safeOuter{
+ height:8px;
+ margin-top:3px;
+ background:#444;
+ border-radius:10px;
+ overflow:hidden;
+}
+#safeBar{
+ height:100%;
+ width:0%;
+ background:#32d74b;
+}
+
+#controls{height:235px;padding-top:6px}
+
+button{
+ border:0;
+ border-radius:15px;
+ color:white;
+ font-weight:900;
+}
+button:active{transform:scale(.92)}
+
+#modeRow{margin-bottom:5px}
+.modeButton{width:125px;height:40px;font-size:14px}
+#attackButton{background:#ff3b30}
+#defendButton{background:#1477dd}
+
+#swing{
+ width:140px;height:60px;
+ background:#ff3b30;
+ font-size:19px;
+}
+
+#power{
+ width:105px;height:55px;
+ background:#9146ff;
+}
+
+#runControls{display:none}
+.runButton{
+ width:135px;height:59px;
+ margin:3px;
+ font-size:16px;
+}
+#runNext{background:#16a766}
+#runBack{background:#1477dd}
+
+#pitchControls{display:none;margin-bottom:3px}
+.pitch{
+ width:30%;
+ max-width:115px;
+ height:43px;
+ margin:1px;
+ font-size:11px;
+}
+#fastball{background:#ff3b30}
+#curve{background:#1477dd}
+#change{background:#16a766}
+
+#defenseControls{display:none}
+#selectedText{font-size:12px;font-weight:900;margin:2px}
+
+#diamond{
+ position:relative;
+ width:180px;
+ height:122px;
+ margin:auto;
+}
+
+.diamondButton{
+ position:absolute;
+ width:68px;height:45px;
+ background:#26333d;
+ font-size:11px;
+ border:2px solid #82909b;
+}
+
+#dUp{left:56px;top:0}
+#dLeft{left:0;top:39px}
+#dRight{right:0;top:39px}
+#dDown{left:56px;bottom:0}
+
+#centerDiamond{
+ position:absolute;
+ left:70px;top:48px;
+ width:40px;height:30px;
+ transform:rotate(45deg);
+ background:#b97943;
+ border:2px solid white;
+ pointer-events:none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="header">
+ <div id="title">⚾ KYLE BASEBALL V7.4</div>
+ <div id="score">BLUE 0 : 0 RED</div>
+ <div id="info">INNING 1 ▲ • 0 OUT</div>
+ <div id="count">BALL 0 • STRIKE 0</div>
+</div>
+
+<div id="stadium">
+
+ <div id="wall">
+  <span>330 FT</span>
+  <span>400 FT</span>
+  <span>330 FT</span>
+ </div>
+
+ <div id="lineL"></div>
+ <div id="lineR"></div>
+
+ <div id="dirt"></div>
+ <div id="grass"></div>
+
+ <div id="home" class="base"></div>
+ <div id="first" class="base"></div>
+ <div id="second" class="base"></div>
+ <div id="third" class="base"></div>
+
+ <div id="P" class="player red">P</div>
+ <div id="LF" class="player red">LF</div>
+ <div id="CF" class="player red">CF</div>
+ <div id="RF" class="player red">RF</div>
+ <div id="SS" class="player red">SS</div>
+ <div id="B2" class="player red">2B</div>
+ <div id="B1" class="player red">1B</div>
+ <div id="B3" class="player red">3B</div>
+
+ <div id="userRunner" class="player blue">🏃</div>
+ <div id="cpuRunner" class="player red">🏃</div>
+
+ <div id="landing"></div>
+ <div id="ball"></div>
+
+ <div id="distanceBox">
+  📏 <span id="distance">0</span> FT
+ </div>
+
+ <div id="safeMeter">
+  <div id="safeText">⏱️ SAFE IN 1.5s</div>
+  <div id="safeOuter">
+   <div id="safeBar"></div>
+  </div>
+ </div>
+
+ <div id="message"></div>
+ <div id="sub"></div>
+
+</div>
+
+<div id="controls">
+
+ <div id="modeRow">
+  <button id="attackButton" class="modeButton">🏏 ATTACK</button>
+  <button id="defendButton" class="modeButton">🧤 DEFEND</button>
+ </div>
+
+ <div id="batControls">
+  <button id="swing">💥 SWING</button>
+  <button id="power">💣 POWER</button>
+ </div>
+
+ <div id="runControls">
+  <button id="runNext" class="runButton">▲ NEXT BASE</button>
+  <button id="runBack" class="runButton">▼ GO BACK</button>
+ </div>
+
+ <div id="pitchControls">
+  <button id="fastball" class="pitch">🔥 FASTBALL</button>
+  <button id="curve" class="pitch">🌀 CURVE</button>
+  <button id="change" class="pitch">🐌 CHANGE</button>
+ </div>
+
+ <div id="defenseControls">
+
+  <div id="selectedText">🟡 CONTROL: P</div>
+
+  <div id="diamond">
+   <button id="dUp" class="diamondButton">▲<br>2ND</button>
+   <button id="dLeft" class="diamondButton">◀ 3RD</button>
+   <div id="centerDiamond"></div>
+   <button id="dRight" class="diamondButton">1ST ▶</button>
+   <button id="dDown" class="diamondButton">▼<br>HOME</button>
+  </div>
+
+ </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const defenderEls=[
+ $("P"),$("LF"),$("CF"),$("RF"),
+ $("SS"),$("B2"),$("B1"),$("B3")
+];
+
+const userRunnerEl=$("userRunner");
+const cpuRunnerEl=$("cpuRunner");
+const ballEl=$("ball");
+const landingEl=$("landing");
+
+const batControls=$("batControls");
+const runControls=$("runControls");
+const pitchControls=$("pitchControls");
+const defenseControls=$("defenseControls");
+
+const messageEl=$("message");
+const subEl=$("sub");
+const selectedText=$("selectedText");
+
+const distanceBox=$("distanceBox");
+const distanceEl=$("distance");
+
+const safeMeter=$("safeMeter");
+const safeText=$("safeText");
+const safeBar=$("safeBar");
+
+const bases=[
+ {name:"HOME",x:50,y:92},
+ {name:"1ST",x:74,y:73},
+ {name:"2ND",x:50,y:53},
+ {name:"3RD",x:26,y:73},
+ {name:"HOME",x:50,y:92}
+];
+
+let defenders=[];
+
+function resetDefenders(){
+ defenders=[
+  {name:"P",x:50,y:70,s:.30},
+  {name:"LF",x:17,y:30,s:.28},
+  {name:"CF",x:50,y:18,s:.30},
+  {name:"RF",x:83,y:30,s:.28},
+  {name:"SS",x:34,y:58,s:.32},
+  {name:"2B",x:66,y:58,s:.32},
+  {name:"1B",x:72,y:70,s:.30},
+  {name:"3B",x:28,y:70,s:.30}
+ ];
+}
+
+let blueScore=0;
+let redScore=0;
+let inning=1;
+let outs=0;
+let balls=0;
+let strikes=0;
+
+let mode="attack";
+let playActive=false;
+let pitchActive=false;
+
+let ballX=50;
+let ballY=70;
+let ballVX=0;
+let ballVY=0;
+
+let pitchSpeed=.6;
+let pitchCurve=0;
+
+let ballFlying=false;
+let ballRolling=false;
+
+let targetDistance=0;
+let hitDistance=0;
+let landingX=50;
+let landingY=30;
+
+/* USER OFFENSE */
+
+let userX=50;
+let userY=92;
+
+let userFrom=0;
+let userTo=1;
+let userBase=0;
+let userDirection=0;
+
+let cpuDefenseHolder=-1;
+let cpuThrow=false;
+let cpuThrowReceiver=-1;
+let cpuThrowBase=0;
+let cpuThrowVX=0;
+let cpuThrowVY=0;
+
+/* USER DEFENSE */
+
+let selected=0;
+let ballHolder=-1;
+
+let throwActive=false;
+let throwReceiver=-1;
+let throwBase=0;
+let throwVX=0;
+let throwVY=0;
+
+let moveUp=false;
+let moveDown=false;
+let moveLeft=false;
+let moveRight=false;
+
+/* CPU BATTER/RUNNER */
+
+let cpuX=50;
+let cpuY=92;
+let cpuRunning=false;
+
+let cpuSafeCounting=false;
+let cpuSafeStart=0;
+
+/* USER SAFE TIMER */
+
+let userSafeBase=0;
+let userSafeStart=0;
+
+function tap(el,fn){
+ el.addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  fn();
+ });
+}
+
+function say(a,b=""){
+ messageEl.innerHTML=a;
+ subEl.innerHTML=b;
+}
+
+function dist(x1,y1,x2,y2){
+ return Math.hypot(x1-x2,y1-y2);
+}
+
+function moveToward(p,x,y,s){
+ let dx=x-p.x;
+ let dy=y-p.y;
+ let d=Math.hypot(dx,dy);
+
+ if(d>.3){
+  p.x+=dx/d*s;
+  p.y+=dy/d*s;
+ }
+}
+
+function updateUI(){
+ $("score").innerHTML=
+ "BLUE "+blueScore+" : "+redScore+" RED";
+
+ $("info").innerHTML=
+ "INNING "+inning+
+ (mode==="attack"?" ▲":" ▼")+
+ " • "+outs+" OUT";
+
+ $("count").innerHTML=
+ "BALL "+balls+
+ " • STRIKE "+strikes;
+}
+
+function setTeamColor(color){
+ defenderEls.forEach(el=>{
+  el.classList.remove(
+   "red","blue","selected","hasball"
+  );
+
+  el.classList.add(color);
+ });
+}
+
+function draw(){
+
+ ballEl.style.left=ballX+"%";
+ ballEl.style.top=ballY+"%";
+
+ userRunnerEl.style.left=userX+"%";
+ userRunnerEl.style.top=userY+"%";
+
+ cpuRunnerEl.style.left=cpuX+"%";
+ cpuRunnerEl.style.top=cpuY+"%";
+
+ defenders.forEach((d,i)=>{
+
+  defenderEls[i].style.left=d.x+"%";
+  defenderEls[i].style.top=d.y+"%";
+
+  defenderEls[i].classList.toggle(
+   "selected",
+   mode==="defend" && i===selected
+  );
+
+  defenderEls[i].classList.toggle(
+   "hasball",
+   (mode==="defend" && ballHolder===i) ||
+   (mode==="attack" && cpuDefenseHolder===i)
+  );
+
+ });
+}
+
+/* =========================
+   MODE
+========================= */
+
+tap($("attackButton"),()=>{
+ if(!playActive)setAttack();
+});
+
+tap($("defendButton"),()=>{
+ if(!playActive)setDefend();
+});
+
+function setAttack(){
+
+ mode="attack";
+
+ resetDefenders();
+ setTeamColor("red");
+
+ userRunnerEl.style.display="flex";
+ cpuRunnerEl.style.display="none";
+
+ batControls.style.display="block";
+ runControls.style.display="none";
+
+ pitchControls.style.display="none";
+ defenseControls.style.display="none";
+
+ playActive=false;
+ pitchActive=false;
+
+ ballHolder=-1;
+ cpuDefenseHolder=-1;
+
+ ballX=50;
+ ballY=70;
+
+ userX=50;
+ userY=92;
+
+ cancelUserSafe();
+
+ say(
+  "🏏 ATTACK!",
+  "YOU BAT • RED DEFENDS"
+ );
+
+ updateUI();
+
+ setTimeout(startCpuPitch,700);
+}
+
+function setDefend(){
+
+ mode="defend";
+
+ resetDefenders();
+ setTeamColor("blue");
+
+ userRunnerEl.style.display="none";
+ cpuRunnerEl.style.display="flex";
+
+ batControls.style.display="none";
+ runControls.style.display="none";
+
+ pitchControls.style.display="block";
+ defenseControls.style.display="block";
+
+ playActive=false;
+ pitchActive=false;
+
+ selected=0;
+
+ ballHolder=-1;
+ throwActive=false;
+
+ ballX=50;
+ ballY=70;
+
+ resetCpuBatter();
+
+ selectedText.innerHTML=
+ "🟡 CONTROL: P";
+
+ hideSafeMeter();
+
+ say(
+  "🧤 DEFEND!",
+  "CHOOSE A PITCH"
+ );
+
+ updateUI();
+}
+
+/* =========================
+   ATTACK PITCH
+========================= */
+
+function startCpuPitch(){
+
+ if(
+  mode!=="attack" ||
+  playActive
+ )return;
+
+ pitchActive=true;
+
+ ballX=50;
+ ballY=70;
+
+ pitchSpeed=
+ [0.48,0.60,0.76][
+  Math.floor(Math.random()*3)
+ ];
+
+ pitchCurve=
+ (Math.random()-.5)*.045;
+}
+
+let swingNow=false;
+let powerSwing=false;
+
+tap($("swing"),()=>{
+
+ if(pitchActive){
+  powerSwing=false;
+  swingNow=true;
+ }
+
+});
+
+tap($("power"),()=>{
+
+ if(pitchActive){
+  powerSwing=true;
+  swingNow=true;
+ }
+
+});
+
+function updateAttackPitch(){
+
+ if(
+  mode!=="attack" ||
+  !pitchActive
+ )return;
+
+ ballY+=pitchSpeed;
+ ballX+=pitchCurve;
+
+ if(swingNow){
+
+  swingNow=false;
+
+  let timing=
+  Math.abs(ballY-88);
+
+  if(timing>10){
+
+   pitchActive=false;
+   strikes++;
+
+   say(
+    "💨 MISS!",
+    "STRIKE"
+   );
+
+   if(strikes>=3){
+
+    strikes=0;
+    balls=0;
+
+    addOut();
+
+   }
+
+   updateUI();
+
+   setTimeout(
+    startCpuPitch,
+    650
+   );
+
+   return;
+  }
+
+  attackHit(timing);
+  return;
+ }
+
+ if(ballY>94){
+
+  pitchActive=false;
+  strikes++;
+
+  say(
+   "⚾ STRIKE!",
+   ""
+  );
+
+  if(strikes>=3){
+
+   strikes=0;
+   balls=0;
+
+   addOut();
+
+  }
+
+  updateUI();
+
+  setTimeout(
+   startCpuPitch,
+   650
+  );
+
+ }
+}
+
+function attackHit(timing){
+
+ pitchActive=false;
+ playActive=true;
+
+ resetDefenders();
+
+ cpuDefenseHolder=-1;
+ cpuThrow=false;
+
+ let q=
+ Math.max(
+  0,
+  10-timing
+ );
+
+ targetDistance=
+ Math.min(
+  470,
+  90+
+  q*24+
+  Math.random()*110+
+  (powerSwing?55:0)
+ );
+
+ hitDistance=0;
+
+ let direction=
+ (Math.random()-.5)*1.5;
+
+ let depth=
+ Math.min(
+  .95,
+  targetDistance/420
+ );
+
+ landingX=
+ Math.max(
+  8,
+  Math.min(
+   92,
+   50+direction*36*depth
+  )
+ );
+
+ landingY=
+ Math.max(
+  8,
+  87-depth*72
+ );
+
+ ballX=50;
+ ballY=90;
+
+ ballVX=
+ (landingX-50)/110;
+
+ ballVY=
+ -.63-q*.035;
+
+ ballFlying=true;
+ ballRolling=false;
+
+ userX=50;
+ userY=92;
+
+ userFrom=0;
+ userTo=1;
+ userBase=0;
+ userDirection=0;
+
+ cancelUserSafe();
+
+ distanceBox.style.display="block";
+
+ landingEl.style.display=
+ targetDistance>=390
+ ? "none"
+ : "block";
+
+ landingEl.style.left=
+ landingX+"%";
+
+ landingEl.style.top=
+ landingY+"%";
+
+ batControls.style.display="none";
+ runControls.style.display="block";
+
+ say(
+  "💥 HIT!",
+  "RUN!"
+ );
+}
+
+/* =========================
+   ATTACK BALL
+========================= */
+
+function updateAttackBall(){
+
+ if(
+  mode!=="attack" ||
+  !playActive ||
+  cpuDefenseHolder>=0 ||
+  cpuThrow
+ )return;
+
+ if(ballFlying){
+
+  ballX+=ballVX;
+  ballY+=ballVY;
+
+  ballVY+=.011;
+
+  hitDistance+=
+  Math.max(
+   2,
+   targetDistance/110
+  );
+
+  distanceEl.innerHTML=
+  Math.round(
+   Math.min(
+    hitDistance,
+    targetDistance
+   )
+  );
+
+  if(
+   hitDistance>=targetDistance &&
+   ballVY>0
+  ){
+
+   ballFlying=false;
+
+   landingEl.style.display="none";
+
+   if(targetDistance>=390){
+
+    say(
+     "🚀 HOME RUN!",
+     "RUN!"
+    );
+
+    ballX=landingX;
+    ballY=3;
+
+   }else{
+
+    ballRolling=true;
+
+    ballX=landingX;
+    ballY=landingY;
+
+    say(
+     "⚾ BALL DOWN!",
+     "RUN!"
+    );
+
+   }
+  }
+
+ }
+
+ else if(ballRolling){
+
+  ballX+=ballVX*.12;
+  ballY+=.04;
+
+ }
+
+}
+
+/* =========================
+   RED CPU DEFENSE
+========================= */
+
+function updateAttackDefense(){
+
+ if(
+  mode!=="attack" ||
+  !playActive
+ )return;
+
+ if(cpuThrow){
+
+  updateCpuThrow();
+  return;
+
+ }
+
+ if(cpuDefenseHolder>=0){
+
+  let f=
+  defenders[cpuDefenseHolder];
+
+  ballX=f.x+1;
+  ballY=f.y-1;
+
+  let rd=
+  dist(
+   f.x,
+   f.y,
+   userX,
+   userY
+  );
+
+  if(
+   rd<11 &&
+   !userOnBase()
+  ){
+
+   moveToward(
+    f,
+    userX,
+    userY,
+    .34
+   );
+
+   if(rd<2.3){
+
+    userDirection=0;
+
+    say(
+     "❌ TAG OUT!",
+     f.name+" GOT YOU"
+    );
+
+    setTimeout(()=>{
+
+     addOut();
+     finishAttack();
+
+    },600);
+
+   }
+
+   return;
+  }
+
+  cpuThrowTo(
+   userDirection<0
+   ? userFrom
+   : userTo
+  );
+
+  return;
+ }
+
+ let tx=
+ ballFlying
+ ? landingX
+ : ballX;
+
+ let ty=
+ ballFlying
+ ? landingY
+ : ballY;
+
+ let order=
+ defenders
+ .map((f,i)=>({
+  i,
+  d:dist(
+   f.x,
+   f.y,
+   tx,
+   ty
+  )
+ }))
+ .sort(
+  (a,b)=>a.d-b.d
+ );
+
+ defenders.forEach((f,i)=>{
+
+  if(
+   order
+   .slice(0,3)
+   .some(o=>o.i===i)
+  ){
+
+   moveToward(
+    f,
+    tx,
+    ty,
+    f.s
+   );
+
+  }else{
+
+   if(i===6)
+    moveToward(f,72,70,.16);
+
+   else if(i===5)
+    moveToward(f,52,55,.14);
+
+   else if(i===4)
+    moveToward(f,47,56,.14);
+
+   else if(i===7)
+    moveToward(f,28,70,.16);
+
+   else if(i===0)
+    moveToward(f,50,68,.12);
+
+  }
+
+ });
+
+ if(
+  ballFlying &&
+  ballVY>0
+ ){
+
+  for(
+   let i=0;
+   i<defenders.length;
+   i++
+  ){
+
+   if(
+    dist(
+     defenders[i].x,
+     defenders[i].y,
+     ballX,
+     ballY
+    )<3.2
+   ){
+
+    ballFlying=false;
+    cpuDefenseHolder=i;
+
+    userDirection=0;
+
+    say(
+     "🧤 CATCH!",
+     "OUT!"
+    );
+
+    setTimeout(()=>{
+
+     addOut();
+     finishAttack();
+
+    },650);
+
+    return;
+   }
+  }
+ }
+
+ if(ballRolling){
+
+  for(
+   let i=0;
+   i<defenders.length;
+   i++
+  ){
+
+   if(
+    dist(
+     defenders[i].x,
+     defenders[i].y,
+     ballX,
+     ballY
+    )<2.6
+   ){
+
+    ballRolling=false;
+    cpuDefenseHolder=i;
+
+    return;
+   }
+  }
+ }
+}
+
+function cpuThrowTo(baseNum){
+
+ baseNum=
+ Math.max(
+  1,
+  Math.min(4,baseNum)
+ );
+
+ let holder=
+ defenders[cpuDefenseHolder];
+
+ let b=
+ bases[baseNum];
+
+ let receiver=-1;
+ let best=999;
+
+ defenders.forEach((f,i)=>{
+
+  if(i===cpuDefenseHolder)
+   return;
+
+  let d=
+  dist(
+   f.x,
+   f.y,
+   b.x,
+   b.y
+  );
+
+  if(d<best){
+
+   best=d;
+   receiver=i;
+
+  }
+
+ });
+
+ if(receiver<0)return;
+
+ defenders[receiver].x=
+ b.x+(b.x>50?-2:2);
+
+ defenders[receiver].y=
+ b.y-1;
+
+ ballX=holder.x;
+ ballY=holder.y;
+
+ cpuDefenseHolder=-1;
+
+ let dx=
+ defenders[receiver].x-ballX;
+
+ let dy=
+ defenders[receiver].y-ballY;
+
+ let d=
+ Math.hypot(dx,dy);
+
+ cpuThrowVX=
+ dx/d*.82;
+
+ cpuThrowVY=
+ dy/d*.82;
+
+ cpuThrowReceiver=
+ receiver;
+
+ cpuThrowBase=
+ baseNum;
+
+ cpuThrow=true;
+}
+
+function updateCpuThrow(){
+
+ ballX+=cpuThrowVX;
+ ballY+=cpuThrowVY;
+
+ let receiver=
+ defenders[cpuThrowReceiver];
+
+ if(
+  dist(
+   ballX,
+   ballY,
+   receiver.x,
+   receiver.y
+  )<2
+ ){
+
+  cpuThrow=false;
+  cpuDefenseHolder=
+  cpuThrowReceiver;
+
+  let b=
+  bases[cpuThrowBase];
+
+  if(
+   userDirection>0 &&
+   userTo===cpuThrowBase &&
+   dist(
+    userX,
+    userY,
+    b.x,
+    b.y
+   )>4.5
+  ){
+
+   userDirection=0;
+
+   say(
+    "❌ FORCE OUT!",
+    "BALL BEAT YOU"
+   );
+
+   setTimeout(()=>{
+
+    addOut();
+    finishAttack();
+
+   },600);
+
+  }
+ }
+}
+
+/* =========================
+   USER RUNNING
+========================= */
+
+tap($("runNext"),()=>{
+
+ if(
+  mode==="attack" &&
+  playActive
+ ){
+
+  cancelUserSafe();
+
+  userDirection=1;
+
+ }
+
+});
+
+tap($("runBack"),()=>{
+
+ if(
+  mode==="attack" &&
+  playActive &&
+  userFrom>0
+ ){
+
+  cancelUserSafe();
+
+  userDirection=-1;
+
+ }
+
+});
+
+function updateUserRunner(){
+
+ if(
+  mode!=="attack" ||
+  !playActive ||
+  !userDirection
+ )return;
+
+ let target=
+ userDirection>0
+ ? bases[userTo]
+ : bases[userFrom];
+
+ let dx=
+ target.x-userX;
+
+ let dy=
+ target.y-userY;
+
+ let d=
+ Math.hypot(dx,dy);
+
+ if(d>1){
+
+  userX+=dx/d*.34;
+  userY+=dy/d*.34;
+
+  return;
+ }
+
+ userX=target.x;
+ userY=target.y;
+
+ if(userDirection>0){
+
+  userBase=userTo;
+
+  if(userBase===4){
+
+   blueScore++;
+
+   say(
+    "🏠 SCORE!",
+    "BLUE RUN!"
+   );
+
+   updateUI();
+
+   setTimeout(
+    finishAttack,
+    650
+   );
+
+   return;
+  }
+
+  userFrom=userBase;
+  userTo=userBase+1;
+
+ }else{
+
+  userBase=userFrom;
+
+ }
+
+ userDirection=0;
+
+ startUserSafe(userBase);
+}
+
+function userOnBase(){
+
+ for(let i=1;i<=3;i++){
+
+  if(
+   dist(
+    userX,
+    userY,
+    bases[i].x,
+    bases[i].y
+   )<4
+  )return true;
+
+ }
+
+ return false;
+}
+
+function startUserSafe(baseNum){
+
+ if(
+  baseNum<1 ||
+  baseNum>3
+ )return;
+
+ userSafeBase=
+ baseNum;
+
+ userSafeStart=
+ performance.now();
+
+ safeMeter.style.display=
+ "block";
+
+ safeBar.style.width=
+ "0%";
+}
+
+function cancelUserSafe(){
+
+ userSafeBase=0;
+
+ hideSafeMeter();
+}
+
+function hideSafeMeter(){
+
+ safeMeter.style.display=
+ "none";
+
+ safeBar.style.width=
+ "0%";
+}
+
+function updateUserSafe(){
+
+ if(!userSafeBase)return;
+
+ if(userDirection){
+
+  cancelUserSafe();
+  return;
+
+ }
+
+ let elapsed=
+ performance.now()-
+ userSafeStart;
+
+ let progress=
+ Math.min(
+  1,
+  elapsed/1500
+ );
+
+ safeBar.style.width=
+ progress*100+"%";
+
+ safeText.innerHTML=
+ "⏱️ SAFE IN "+
+ Math.max(
+  0,
+  (1500-elapsed)/1000
+ ).toFixed(1)+
+ "s";
+
+ if(elapsed>=1500){
+
+  let b=
+  userSafeBase;
+
+  userSafeBase=0;
+
+  hideSafeMeter();
+
+  say(
+   "✅ SAFE AT "+
+   bases[b].name+
+   "!",
+   "NEXT BATTER"
+  );
+
+  setTimeout(
+   finishAttack,
+   500
+  );
+
+ }
+}
+
+function finishAttack(){
+
+ if(mode!=="attack")return;
+
+ playActive=false;
+ pitchActive=false;
+
+ ballFlying=false;
+ ballRolling=false;
+
+ cpuThrow=false;
+ cpuDefenseHolder=-1;
+
+ cancelUserSafe();
+
+ landingEl.style.display=
+ "none";
+
+ distanceBox.style.display=
+ "none";
+
+ runControls.style.display=
+ "none";
+
+ batControls.style.display=
+ "block";
+
+ resetDefenders();
+
+ ballX=50;
+ ballY=70;
+
+ userX=50;
+ userY=92;
+
+ userFrom=0;
+ userTo=1;
+ userBase=0;
+ userDirection=0;
+
+ balls=0;
+ strikes=0;
+
+ updateUI();
+
+ setTimeout(
+  startCpuPitch,
+  700
+ );
+}
+
+/* =========================
+   DEFENDER SELECTION
+========================= */
+
+defenderEls.forEach((el,i)=>{
+
+ tap(el,()=>{
+
+  if(mode!=="defend")
+   return;
+
+  selected=i;
+
+  selectedText.innerHTML=
+  "🟡 CONTROL: "+
+  defenders[i].name+
+  (ballHolder===i?" ⚾":"");
+
+ });
+
+});
+
+/* =========================
+   USER PITCHING
+========================= */
+
+tap($("fastball"),()=>{
+ defensePitch(
+  .82,
+  0,
+  "🔥 FASTBALL"
+ );
+});
+
+tap($("curve"),()=>{
+ defensePitch(
+  .61,
+  .045,
+  "🌀 CURVE"
+ );
+});
+
+tap($("change"),()=>{
+ defensePitch(
+  .48,
+  0,
+  "🐌 CHANGE"
+ );
+});
+
+function defensePitch(
+ speed,
+ curve,
+ name
+){
+
+ if(
+  mode!=="defend" ||
+  playActive ||
+  pitchActive
+ )return;
+
+ pitchActive=true;
+
+ pitchSpeed=speed;
+ pitchCurve=curve;
+
+ ballX=50;
+ ballY=70;
+
+ say(
+  name,
+  "CPU BATTING..."
+ );
+}
+
+function updateDefensePitch(){
+
+ if(
+  mode!=="defend" ||
+  !pitchActive
+ )return;
+
+ ballY+=pitchSpeed;
+
+ if(pitchCurve){
+
+  ballX+=
+  Math.sin(
+   ballY*.18
+  )*pitchCurve;
+
+ }
+
+ if(ballY>=92){
+
+  pitchActive=false;
+
+  if(Math.random()>.68){
+
+   strikes++;
+
+   say(
+    "🔥 CPU MISSED!",
+    "STRIKE"
+   );
+
+   if(strikes>=3){
+
+    strikes=0;
+    balls=0;
+
+    addOut();
+
+   }
+
+   updateUI();
+
+   return;
+  }
+
+  cpuHit();
+
+ }
+}
+
+/* =========================
+   CPU BATTER
+========================= */
+
+function resetCpuBatter(){
+
+ cpuX=50;
+ cpuY=92;
+
+ cpuRunning=false;
+
+ cpuSafeCounting=false;
+ cpuSafeStart=0;
+}
+
+function cpuHit(){
+
+ playActive=true;
+
+ strikes=0;
+ balls=0;
+
+ targetDistance=
+ 75+Math.random()*330;
+
+ hitDistance=0;
+
+ let direction=
+ (Math.random()-.5)*1.55;
+
+ let depth=
+ Math.min(
+  .94,
+  targetDistance/400
+ );
+
+ landingX=
+ Math.max(
+  8,
+  Math.min(
+   92,
+   50+direction*37*depth
+  )
+ );
+
+ landingY=
+ Math.max(
+  8,
+  87-depth*72
+ );
+
+ ballX=50;
+ ballY=90;
+
+ ballVX=
+ (landingX-50)/110;
+
+ ballVY=-.65;
+
+ ballFlying=true;
+ ballRolling=false;
+
+ ballHolder=-1;
+ throwActive=false;
+
+ resetCpuBatter();
+
+ /*
+  CPU BATTER RUNS ONLY TO FIRST.
+ */
+
+ cpuRunning=true;
+
+ landingEl.style.display=
+ "block";
+
+ landingEl.style.left=
+ landingX+"%";
+
+ landingEl.style.top=
+ landingY+"%";
+
+ distanceBox.style.display=
+ "block";
+
+ pitchControls.style.display=
+ "none";
+
+ hideSafeMeter();
+
+ say(
+  "🔴 CPU HIT!",
+  "GET THE BALL!"
+ );
+}
+
+/* =========================
+   CPU RUN TO FIRST
+========================= */
+
+function updateCpuRunner(){
+
+ if(
+  mode!=="defend" ||
+  !playActive
+ )return;
+
+ /*
+  RUNNING TO FIRST
+ */
+
+ if(cpuRunning){
+
+  let target=
+  bases[1];
+
+  let dx=
+  target.x-cpuX;
+
+  let dy=
+  target.y-cpuY;
+
+  let d=
+  Math.hypot(dx,dy);
+
+  if(d>1){
+
+   cpuX+=dx/d*.27;
+   cpuY+=dy/d*.27;
+
+   return;
+  }
+
+  /*
+   REACHED FIRST.
+  */
+
+  cpuX=target.x;
+  cpuY=target.y;
+
+  cpuRunning=false;
+
+  cpuSafeCounting=true;
+
+  cpuSafeStart=
+  performance.now();
+
+  safeMeter.style.display=
+  "block";
+
+  safeBar.style.width=
+  "0%";
+
+  say(
+   "⏱️ CPU ON 1ST!",
+   "HOLD FOR 1.5s"
+  );
+
+  return;
+ }
+
+ /*
+  WAITING ON FIRST
+ */
+
+ if(cpuSafeCounting){
+
+  let elapsed=
+  performance.now()-
+  cpuSafeStart;
+
+  let progress=
+  Math.min(
+   1,
+   elapsed/1500
+  );
+
+  safeBar.style.width=
+  progress*100+"%";
+
+  safeText.innerHTML=
+  "🔴 CPU SAFE IN "+
+  Math.max(
+   0,
+   (1500-elapsed)/1000
+  ).toFixed(1)+
+  "s";
+
+  /*
+   1.5 SECONDS = SAFE.
+   PLAY ENDS.
+  */
+
+  if(elapsed>=1500){
+
+   cpuSafeCounting=false;
+
+   hideSafeMeter();
+
+   say(
+    "✅ CPU SAFE!",
+    "NEXT BATTER"
+   );
+
+   setTimeout(
+    finishDefense,
+    500
+   );
+
+  }
+
+ }
+}
+
+function cpuOnFirst(){
+
+ return(
+  dist(
+   cpuX,
+   cpuY,
+   bases[1].x,
+   bases[1].y
+  )<4
+ );
+
+}
+
+/* =========================
+   DEFENSE BALL
+========================= */
+
+function updateDefenseBall(){
+
+ if(
+  mode!=="defend" ||
+  !playActive
+ )return;
+
+ /*
+  PLAYER HOLDING BALL
+ */
+
+ if(ballHolder>=0){
+
+  let f=
+  defenders[ballHolder];
+
+  ballX=f.x+1;
+  ballY=f.y-1;
+
+  /*
+   TAG OUT ONLY BEFORE
+   CPU REACHES FIRST.
+  */
+
+  if(
+   cpuRunning &&
+   dist(
+    f.x,
+    f.y,
+    cpuX,
+    cpuY
+   )<2.3
+  ){
+
+   cpuRunning=false;
+   cpuSafeCounting=false;
+
+   hideSafeMeter();
+
+   say(
+    "🧤 TAG OUT!",
+    f.name+" GOT HIM!"
+   );
+
+   setTimeout(()=>{
+
+    addOut();
+    finishDefense();
+
+   },550);
+
+  }
+
+  return;
+ }
+
+ /*
+  BALL BEING THROWN
+ */
+
+ if(throwActive){
+
+  updateUserThrow();
+  return;
+
+ }
+
+ /*
+  BALL IN AIR
+ */
+
+ if(ballFlying){
+
+  ballX+=ballVX;
+  ballY+=ballVY;
+
+  ballVY+=.011;
+
+  hitDistance+=
+  Math.max(
+   2,
+   targetDistance/110
+  );
+
+  distanceEl.innerHTML=
+  Math.round(
+   Math.min(
+    hitDistance,
+    targetDistance
+   )
+  );
+
+  /*
+   FLY CATCH
+  */
+
+  if(ballVY>0){
+
+   for(
+    let i=0;
+    i<defenders.length;
+    i++
+   ){
+
+    if(
+     dist(
+      defenders[i].x,
+      defenders[i].y,
+      ballX,
+      ballY
+     )<3.2
+    ){
+
+     ballFlying=false;
+     ballHolder=i;
+     selected=i;
+
+     cpuRunning=false;
+     cpuSafeCounting=false;
+
+     hideSafeMeter();
+
+     selectedText.innerHTML=
+     "🟡 CONTROL: "+
+     defenders[i].name+
+     " ⚾";
+
+     say(
+      "🧤 CATCH!",
+      "OUT!"
+     );
+
+     setTimeout(()=>{
+
+      addOut();
+      finishDefense();
+
+     },600);
+
+     return;
+    }
+
+   }
+
+  }
+
+  if(
+   hitDistance>=targetDistance &&
+   ballVY>0
+  ){
+
+   ballFlying=false;
+   ballRolling=true;
+
+   ballX=landingX;
+   ballY=landingY;
+
+   landingEl.style.display=
+   "none";
+
+   say(
+    "⚾ BALL DOWN!",
+    "GO GET IT!"
+   );
+
+  }
+
+ }
+
+ /*
+  BALL ON GROUND
+ */
+
+ else if(ballRolling){
+
+  ballY+=.035;
+
+  for(
+   let i=0;
+   i<defenders.length;
+   i++
+  ){
+
+   if(
+    dist(
+     defenders[i].x,
+     defenders[i].y,
+     ballX,
+     ballY
+    )<2.7
+   ){
+
+    ballRolling=false;
+    ballHolder=i;
+    selected=i;
+
+    selectedText.innerHTML=
+    "🟡 CONTROL: "+
+    defenders[i].name+
+    " ⚾";
+
+    say(
+     "🧤 GOT IT!",
+     "▶1ST ▲2ND ◀3RD ▼HOME"
+    );
+
+    break;
+   }
+
+  }
+
+ }
+}
+
+/* =========================
+   DEFENSE CONTROLLER
+========================= */
+
+function directionDown(dir){
+
+ if(
+  mode!=="defend" ||
+  !playActive
+ )return;
+
+ /*
+  BALL HOLDER THROWS
+ */
+
+ if(ballHolder===selected){
+
+  if(dir==="right")
+   userThrowTo(1);
+
+  if(dir==="up")
+   userThrowTo(2);
+
+  if(dir==="left")
+   userThrowTo(3);
+
+  if(dir==="down")
+   userThrowTo(4);
+
+  return;
+ }
+
+ /*
+  MOVE SELECTED PLAYER
+ */
+
+ if(dir==="up")moveUp=true;
+ if(dir==="down")moveDown=true;
+ if(dir==="left")moveLeft=true;
+ if(dir==="right")moveRight=true;
+}
+
+function stopMove(){
+
+ moveUp=false;
+ moveDown=false;
+ moveLeft=false;
+ moveRight=false;
+
+}
+
+[
+ ["dUp","up"],
+ ["dDown","down"],
+ ["dLeft","left"],
+ ["dRight","right"]
+].forEach(([id,dir])=>{
+
+ $(id).addEventListener(
+  "pointerdown",
+  e=>{
+
+   e.preventDefault();
+
+   directionDown(dir);
+
+  }
+ );
+
+ $(id).addEventListener(
+  "pointerup",
+  stopMove
+ );
+
+ $(id).addEventListener(
+  "pointercancel",
+  stopMove
+ );
+
+});
+
+function updateSelected(){
+
+ if(
+  mode!=="defend" ||
+  !playActive
+ )return;
+
+ let f=
+ defenders[selected];
+
+ let speed=.37;
+
+ if(moveUp)f.y-=speed;
+ if(moveDown)f.y+=speed;
+ if(moveLeft)f.x-=speed;
+ if(moveRight)f.x+=speed;
+
+ f.x=
+ Math.max(
+  4,
+  Math.min(96,f.x)
+ );
+
+ f.y=
+ Math.max(
+  5,
+  Math.min(94,f.y)
+ );
+}
+
+/* =========================
+   THROW
+========================= */
+
+function userThrowTo(baseNum){
+
+ if(
+  ballHolder!==selected ||
+  throwActive
+ )return;
+
+ let holder=
+ defenders[ballHolder];
+
+ let base=
+ bases[baseNum];
+
+ let receiver=-1;
+ let best=999;
+
+ defenders.forEach((f,i)=>{
+
+  if(i===ballHolder)
+   return;
+
+  let d=
+  dist(
+   f.x,
+   f.y,
+   base.x,
+   base.y
+  );
+
+  if(d<best){
+
+   best=d;
+   receiver=i;
+
+  }
+
+ });
+
+ if(receiver<0)return;
+
+ /*
+  Receiver covers base.
+ */
+
+ defenders[receiver].x=
+ base.x+
+ (base.x>50?-1.8:1.8);
+
+ defenders[receiver].y=
+ base.y-1;
+
+ ballX=
+ holder.x;
+
+ ballY=
+ holder.y;
+
+ ballHolder=-1;
+
+ throwReceiver=
+ receiver;
+
+ throwBase=
+ baseNum;
+
+ let dx=
+ defenders[receiver].x-ballX;
+
+ let dy=
+ defenders[receiver].y-ballY;
+
+ let d=
+ Math.hypot(dx,dy);
+
+ throwVX=
+ dx/d*.9;
+
+ throwVY=
+ dy/d*.9;
+
+ throwActive=true;
+
+ say(
+  "⚾ THROW!",
+  "TO "+base.name
+ );
+}
+
+function updateUserThrow(){
+
+ ballX+=throwVX;
+ ballY+=throwVY;
+
+ let receiver=
+ defenders[throwReceiver];
+
+ if(
+  dist(
+   ballX,
+   ballY,
+   receiver.x,
+   receiver.y
+  )<2
+ ){
+
+  throwActive=false;
+
+  ballHolder=
+  throwReceiver;
+
+  selected=
+  throwReceiver;
+
+  selectedText.innerHTML=
+  "🟡 CONTROL: "+
+  receiver.name+
+  " ⚾";
+
+  /*
+   THROW TO FIRST
+   BEFORE RUNNER ARRIVES.
+  */
+
+  if(
+   throwBase===1 &&
+   cpuRunning &&
+   !cpuOnFirst()
+  ){
+
+   cpuRunning=false;
+   cpuSafeCounting=false;
+
+   hideSafeMeter();
+
+   say(
+    "❌ OUT!",
+    "BALL BEAT RUNNER TO 1ST"
+   );
+
+   setTimeout(()=>{
+
+    addOut();
+    finishDefense();
+
+   },600);
+
+   return;
+  }
+
+  /*
+   CPU ALREADY REACHED FIRST.
+   SAFE TIMER CONTINUES.
+  */
+
+  if(
+   throwBase===1 &&
+   cpuOnFirst()
+  ){
+
+   say(
+    "⏱️ CPU ON 1ST!",
+    "SAFE TIMER RUNNING"
+   );
+
+  }
+
+ }
+}
+
+/* =========================
+   FINISH DEFENSE PLAY
+========================= */
+
+function finishDefense(){
+
+ if(mode!=="defend")return;
+
+ playActive=false;
+ pitchActive=false;
+
+ ballFlying=false;
+ ballRolling=false;
+
+ throwActive=false;
+ ballHolder=-1;
+
+ stopMove();
+
+ hideSafeMeter();
+
+ distanceBox.style.display=
+ "none";
+
+ landingEl.style.display=
+ "none";
+
+ resetDefenders();
+ resetCpuBatter();
+
+ selected=0;
+
+ selectedText.innerHTML=
+ "🟡 CONTROL: P";
+
+ ballX=50;
+ ballY=70;
+
+ strikes=0;
+ balls=0;
+
+ pitchControls.style.display=
+ "block";
+
+ /*
+  THIS IS THE NEW CPU BATTER.
+ */
+
+ say(
+  "🔴 NEXT BATTER!",
+  "CHOOSE A PITCH"
+ );
+
+ updateUI();
+}
+
+/* =========================
+   OUTS
+========================= */
+
+function addOut(){
+
+ outs++;
+
+ updateUI();
+
+ if(outs>=3){
+
+  outs=0;
+  inning++;
+
+  say(
+   "🔄 3 OUTS!",
+   "INNING "+inning
+  );
+
+  updateUI();
+
+ }
+}
+
+/* =========================
+   MAIN LOOP
+========================= */
+
+function loop(){
+
+ updateAttackPitch();
+ updateAttackBall();
+ updateAttackDefense();
+
+ updateUserRunner();
+ updateUserSafe();
+
+ updateDefensePitch();
+ updateSelected();
+ updateDefenseBall();
+ updateCpuRunner();
+
+ draw();
+
+ requestAnimationFrame(loop);
+}
+
+/* =========================
+   START GAME
+========================= */
+
+resetDefenders();
+setTeamColor("red");
+
+userRunnerEl.style.display=
+"flex";
+
+cpuRunnerEl.style.display=
+"none";
+
+updateUI();
+draw();
+
+say(
+ "⚾ KYLE BASEBALL V7.4",
+ "ATTACK OR DEFEND"
+);
+
+setTimeout(
+ startCpuPitch,
+ 900
+);
+
+loop();
+</script>
+
+</body>
+</html>
