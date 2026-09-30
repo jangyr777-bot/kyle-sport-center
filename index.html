@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport"
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<style>
+*{
+  box-sizing:border-box;
+  touch-action:none;
+  user-select:none;
+}
+
+body{
+  margin:0;
+  background:#071525;
+  color:white;
+  font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+  text-align:center;
+  overflow:hidden;
+}
+
+h2{
+  margin:8px 0 2px;
+}
+
+#score{
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+#rink{
+  position:relative;
+  width:94vw;
+  height:62vh;
+  margin:auto;
+  background:#e9f9ff;
+  border:5px solid #1976d2;
+  border-radius:28px;
+  overflow:hidden;
+}
+
+/* CENTER RED LINE */
+
+#redline{
+  position:absolute;
+  top:50%;
+  width:100%;
+  height:4px;
+  background:#e34b4b;
+  opacity:.6;
+}
+
+/* CENTER CIRCLE */
+
+#circle{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:105px;
+  height:105px;
+  border:4px solid #e34b4b;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  opacity:.55;
+}
+
+/* BLUE LINES */
+
+.blue{
+  position:absolute;
+  width:100%;
+  height:4px;
+  background:#2385dc;
+  opacity:.6;
+}
+
+#blue1{top:27%;}
+#blue2{top:73%;}
+
+/* REAL GOAL */
+
+#goal{
+  position:absolute;
+  top:4px;
+  left:34%;
+  width:32%;
+  height:48px;
+
+  border-left:7px solid #e22232;
+  border-right:7px solid #e22232;
+  border-bottom:7px solid #e22232;
+
+  border-radius:0 0 12px 12px;
+
+  background:
+  repeating-linear-gradient(
+    45deg,
+    #ffffff88,
+    #ffffff88 6px,
+    #cccccc55 7px,
+    #cccccc55 9px
+  );
+}
+
+/* GOALIE */
+
+#goalie{
+  position:absolute;
+  top:46px;
+  left:46%;
+  width:46px;
+  height:46px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:38px;
+
+  transition:left .08s linear;
+}
+
+/* PLAYER */
+
+#player{
+  position:absolute;
+  left:46%;
+  bottom:55px;
+
+  width:48px;
+  height:48px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:40px;
+}
+
+/* PUCK */
+
+#puck{
+  position:absolute;
+
+  width:22px;
+  height:13px;
+
+  background:#111;
+  border-radius:50%;
+
+  left:49%;
+  bottom:105px;
+
+  z-index:5;
+}
+
+/* BIG MESSAGE */
+
+#message{
+  position:absolute;
+  width:100%;
+  top:43%;
+
+  font-size:40px;
+  font-weight:900;
+  color:#071525;
+
+  text-shadow:0 2px white;
+
+  pointer-events:none;
+}
+
+/* CONTROLS */
+
+#controls{
+  margin-top:5px;
+}
+
+button{
+  border:0;
+  border-radius:15px;
+
+  background:white;
+
+  width:68px;
+  height:53px;
+
+  margin:2px;
+
+  font-size:25px;
+
+  box-shadow:0 3px 8px #0005;
+}
+
+button:active{
+  transform:scale(.91);
+}
+
+#shoot{
+  width:105px;
+
+  background:#ff3b30;
+  color:white;
+
+  font-size:18px;
+  font-weight:900;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<h2>🏒 KYLE HOCKEY</h2>
+
+<div id="score">
+YOU 0 : 0 GOALIE
+</div>
+
+
+<div id="rink">
+
+  <div id="goal"></div>
+
+  <div class="blue" id="blue1"></div>
+  <div class="blue" id="blue2"></div>
+
+  <div id="redline"></div>
+  <div id="circle"></div>
+
+  <div id="goalie">🥷</div>
+
+  <div id="player">🏒</div>
+
+  <div id="puck"></div>
+
+  <div id="message"></div>
+
+</div>
+
+
+<div id="controls">
+
+  <button
+  ontouchstart="startMove(0,1)"
+  ontouchend="stopMove()">
+  ⬆️
+  </button>
+
+  <br>
+
+  <button
+  ontouchstart="startMove(-1,0)"
+  ontouchend="stopMove()">
+  ⬅️
+  </button>
+
+  <button
+  ontouchstart="startMove(0,-1)"
+  ontouchend="stopMove()">
+  ⬇️
+  </button>
+
+  <button
+  ontouchstart="startMove(1,0)"
+  ontouchend="stopMove()">
+  ➡️
+  </button>
+
+  <button id="shoot"
+  ontouchstart="shoot()">
+  🔥 SHOOT
+  </button>
+
+</div>
+
+
+<script>
+
+/* =========================
+   GAME VARIABLES
+========================= */
+
+let playerX = 46;
+let playerY = 55;
+
+let goalieX = 46;
+
+let goals = 0;
+let saves = 0;
+
+let movement = null;
+let shooting = false;
+
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const player =
+document.getElementById("player");
+
+const puck =
+document.getElementById("puck");
+
+const goalie =
+document.getElementById("goalie");
+
+const message =
+document.getElementById("message");
+
+const score =
+document.getElementById("score");
+
+
+/* =========================
+   DRAW PLAYER + PUCK
+========================= */
+
+function draw(){
+
+  player.style.left =
+  playerX + "%";
+
+  player.style.bottom =
+  playerY + "px";
+
+
+  if(!shooting){
+
+    puck.style.left =
+    (playerX + 4) + "%";
+
+    puck.style.bottom =
+    (playerY + 47) + "px";
+  }
+}
+
+
+/* =========================
+   MOVEMENT
+========================= */
+
+function startMove(x,y){
+
+  stopMove();
+
+  movement=setInterval(()=>{
+
+    playerX += x * 1.2;
+
+    playerY += y * 4;
+
+
+    playerX =
+    Math.max(
+      2,
+      Math.min(89,playerX)
+    );
+
+
+    playerY =
+    Math.max(
+      18,
+      Math.min(300,playerY)
+    );
+
+
+    draw();
+
+  },25);
+}
+
+
+function stopMove(){
+
+  if(movement){
+
+    clearInterval(movement);
+
+    movement=null;
+  }
+}
+
+
+/* =========================
+   CPU GOALIE
+========================= */
+
+let goalieDirection=1;
+
+setInterval(()=>{
+
+  goalieX +=
+  goalieDirection * 1.4;
+
+
+  if(goalieX >= 59){
+
+    goalieX=59;
+
+    goalieDirection=-1;
+  }
+
+
+  if(goalieX <= 34){
+
+    goalieX=34;
+
+    goalieDirection=1;
+  }
+
+
+  goalie.style.left =
+  goalieX + "%";
+
+},35);
+
+
+/* =========================
+   SHOOT
+========================= */
+
+function shoot(){
+
+  if(shooting) return;
+
+
+  shooting=true;
+
+  stopMove();
+
+
+  const shotX =
+  playerX + 4;
+
+
+  puck.style.transition =
+  "bottom .48s ease-out";
+
+
+  puck.style.bottom =
+  "91%";
+
+
+  setTimeout(()=>{
+
+    const goalieCenter =
+    goalieX + 4;
+
+
+    const goalieDistance =
+    Math.abs(
+      shotX-goalieCenter
+    );
+
+
+    /* GOALIE SAVE */
+
+    if(
+      shotX > 33 &&
+      shotX < 67 &&
+      goalieDistance < 7
+    ){
+
+      saves++;
+
+      message.innerHTML =
+      "🧤 SAVE!";
+
+      goalie.style.transform =
+      "scale(1.35)";
+
+
+      setTimeout(()=>{
+
+        goalie.style.transform =
+        "scale(1)";
+
+      },250);
+    }
+
+
+    /* GOAL */
+
+    else if(
+      shotX > 34 &&
+      shotX < 66
+    ){
+
+      goals++;
+
+      message.innerHTML =
+      "🚨 GOAL!!!";
+
+      document
+      .getElementById("goal")
+      .style
+      .transform="scale(1.08)";
+
+
+      setTimeout(()=>{
+
+        document
+        .getElementById("goal")
+        .style
+        .transform="scale(1)";
+
+      },250);
+    }
+
+
+    /* MISSED NET */
+
+    else{
+
+      message.innerHTML =
+      "💨 WIDE!";
+    }
+
+
+    score.innerHTML =
+    "YOU " +
+    goals +
+    " : " +
+    saves +
+    " SAVES";
+
+
+    setTimeout(
+      resetPuck,
+      650
+    );
+
+
+  },480);
+}
+
+
+/* =========================
+   RESET PUCK
+========================= */
+
+function resetPuck(){
+
+  puck.style.transition =
+  "none";
+
+
+  shooting=false;
+
+
+  message.innerHTML="";
+
+
+  draw();
+}
+
+
+/* FIRST DRAW */
+
+draw();
+
+</script>
+
+</body>
+</html>
