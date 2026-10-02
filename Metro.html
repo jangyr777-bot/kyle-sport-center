@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>Metro Live V106</title>
+
+<style>
+*{
+ box-sizing:border-box;
+ touch-action:none;
+ -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+ margin:0;
+ width:100%;
+ height:100%;
+ overflow:hidden;
+ font-family:Arial,sans-serif;
+ background:#6fa45c;
+}
+
+#game{
+ position:relative;
+ width:100%;
+ height:100%;
+ overflow:hidden;
+}
+
+#world{
+ position:absolute;
+ left:0;
+ top:0;
+}
+
+/* CITY BLOCK */
+
+.block{
+ position:absolute;
+ width:600px;
+ height:600px;
+ background:#78a964;
+}
+
+/* ROADS */
+
+.roadRight{
+ position:absolute;
+ left:440px;
+ top:0;
+ width:160px;
+ height:600px;
+ background:#3f4448;
+ border-left:8px solid #999;
+}
+
+.roadBottom{
+ position:absolute;
+ left:0;
+ top:440px;
+ width:600px;
+ height:160px;
+ background:#3f4448;
+ border-top:8px solid #999;
+}
+
+.roadRight:after{
+ content:"";
+ position:absolute;
+ left:76px;
+ top:0;
+ width:5px;
+ height:100%;
+ background:repeating-linear-gradient(
+  to bottom,
+  #f3d84a 0 28px,
+  transparent 28px 58px
+ );
+}
+
+.roadBottom:after{
+ content:"";
+ position:absolute;
+ left:0;
+ top:76px;
+ width:100%;
+ height:5px;
+ background:repeating-linear-gradient(
+  to right,
+  #f3d84a 0 28px,
+  transparent 28px 58px
+ );
+}
+
+/* PROPERTY */
+
+.property{
+ position:absolute;
+ left:20px;
+ top:20px;
+ width:400px;
+ height:400px;
+ background:#8aae73;
+ border:4px solid #688d59;
+ border-radius:10px;
+ overflow:hidden;
+}
+
+.building{
+ position:absolute;
+ border:5px solid #0003;
+ border-radius:8px;
+ box-shadow:0 5px 9px #0005;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ text-align:center;
+ font-weight:900;
+}
+
+.name{
+ position:relative;
+ z-index:5;
+ background:#ffffffe8;
+ padding:5px 7px;
+ border-radius:6px;
+ font-size:11px;
+}
+
+.parking{
+ position:absolute;
+ background:#70757a;
+ border:3px solid #aaa;
+}
+
+.parking:after{
+ content:"";
+ position:absolute;
+ inset:5px;
+ background:repeating-linear-gradient(
+  90deg,
+  transparent 0 28px,
+  #eee 28px 31px,
+  transparent 31px 58px
+ );
+}
+
+.driveway{
+ position:absolute;
+ background:#70757a;
+}
+
+.tree{
+ position:absolute;
+ font-size:28px;
+}
+
+.hospital{background:#eee}
+.police{background:#9dcce8}
+.mall{background:#dfbce7}
+.school{background:#e5c25d}
+.villa{background:#d4a46f}
+.apartment{background:#d8d6d0}
+.hotel{background:#d2aa91}
+.gas{background:#ededed}
+.fire{background:#d87166}
+.market{background:#82bc82}
+
+/* PLAYER */
+
+#player{
+ position:fixed;
+ left:50%;
+ top:50%;
+ width:48px;
+ height:80px;
+ margin-left:-24px;
+ margin-top:-40px;
+ background:#e52f33;
+ border:4px solid #951e21;
+ border-radius:13px;
+ box-shadow:0 7px 11px #0008;
+ z-index:500;
+}
+
+#player:before{
+ content:"";
+ position:absolute;
+ left:7px;
+ right:7px;
+ top:10px;
+ height:22px;
+ background:#a4dced;
+ border:3px solid #333;
+ border-radius:5px;
+}
+
+#player:after{
+ content:"";
+ position:absolute;
+ left:8px;
+ right:8px;
+ bottom:10px;
+ height:17px;
+ background:#82bdd3;
+ border:3px solid #333;
+}
+
+/* TRAFFIC */
+
+.ai{
+ position:absolute;
+ width:40px;
+ height:68px;
+ border:3px solid #2229;
+ border-radius:11px;
+ box-shadow:0 4px 7px #0005;
+ z-index:300;
+}
+
+.ai:before{
+ content:"";
+ position:absolute;
+ left:6px;
+ right:6px;
+ top:8px;
+ height:18px;
+ background:#addcea;
+ border-radius:5px;
+}
+
+/* HUD */
+
+#hud{
+ position:fixed;
+ left:10px;
+ top:10px;
+ background:#07131ded;
+ color:white;
+ padding:10px 13px;
+ border-radius:12px;
+ z-index:800;
+ font-weight:bold;
+}
+
+#speed{
+ font-size:28px;
+}
+
+#gear{
+ color:#ffdc59;
+ font-size:13px;
+}
+
+#district{
+ color:#acd0e4;
+ font-size:11px;
+}
+
+/* CRASH */
+
+#crash{
+ position:fixed;
+ left:50%;
+ top:28%;
+ transform:translate(-50%,-50%) scale(.7);
+ background:#b62d2def;
+ color:white;
+ border:4px solid white;
+ border-radius:14px;
+ padding:12px 20px;
+ font-size:25px;
+ font-weight:900;
+ opacity:0;
+ z-index:1000;
+ pointer-events:none;
+}
+
+#crash.show{
+ opacity:1;
+ transform:translate(-50%,-50%) scale(1);
+}
+
+/* CONTROLS */
+
+#controls{
+ position:fixed;
+ left:0;
+ right:0;
+ bottom:8px;
+ display:flex;
+ justify-content:space-between;
+ padding:10px;
+ z-index:900;
+}
+
+.group{
+ display:flex;
+ gap:8px;
+}
+
+button{
+ width:74px;
+ height:74px;
+ border-radius:50%;
+ border:3px solid #ffffff66;
+ background:#15394fe9;
+ color:white;
+ font-size:28px;
+ font-weight:900;
+}
+
+button:active{
+ transform:scale(.9);
+ filter:brightness(1.5);
+}
+
+#go{
+ background:#218149;
+}
+
+#reverse{
+ background:#9b3939;
+}
+
+.smallText{
+ font-size:12px;
+ display:block;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<div id="world"></div>
+
+<div id="player"></div>
+
+<div id="hud">
+🚗 METRO LIVE V106<br>
+<span id="speed">0</span> km/h
+<div id="gear">D</div>
+<div id="district">🏙️ CITY CENTRE</div>
+</div>
+
+<div id="crash">💥 BUMP!</div>
+
+<div id="controls">
+
+<div class="group">
+<button id="left">◀</button>
+<button id="right">▶</button>
+</div>
+
+<div class="group">
+<button id="reverse">▼<span class="smallText">BRAKE / R</span></button>
+<button id="go">▲<span class="smallText">GO</span></button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* ==============================
+   SETTINGS
+============================== */
+
+const BLOCK=600;
+const LOAD=3;
+
+const world=document.getElementById("world");
+const player=document.getElementById("player");
+const speedText=document.getElementById("speed");
+const gearText=document.getElementById("gear");
+const districtText=document.getElementById("district");
+const crashText=document.getElementById("crash");
+
+/* ==============================
+   PLAYER
+============================== */
+
+let playerX=520;
+let playerY=300;
+
+let angle=0;
+let speed=0;
+
+let gas=false;
+let reverse=false;
+let left=false;
+let right=false;
+
+/* ==============================
+   CITY
+============================== */
+
+const blocks=new Map();
+const colliders=[];
+
+function random(x,y,seed){
+
+ const value=
+ Math.sin(
+  x*127.1+
+  y*311.7+
+  seed*79.3
+ )*43758.5453;
+
+ return value-Math.floor(value);
+}
+
+function make(
+ className,
+ x,y,w,h,
+ parent
+){
+
+ const e=document.createElement("div");
+
+ e.className=className;
+
+ if(x!==null)e.style.left=x+"px";
+ if(y!==null)e.style.top=y+"px";
+ if(w!==null)e.style.width=w+"px";
+ if(h!==null)e.style.height=h+"px";
+
+ parent.appendChild(e);
+
+ return e;
+}
+
+function addName(building,text){
+
+ const n=document.createElement("div");
+
+ n.className="name";
+ n.textContent=text;
+
+ building.appendChild(n);
+}
+
+function solid(bx,by,x,y,w,h){
+
+ colliders.push({
+  x:bx*BLOCK+x,
+  y:by*BLOCK+y,
+  w:w,
+  h:h
+ });
+}
+
+/* ==============================
+   HOSPITAL
+============================== */
+
+function hospital(p,bx,by){
+
+ const b=make(
+  "building hospital",
+  25,25,230,150,p
+ );
+
+ addName(b,"🏥 HOSPITAL");
+
+ const heli=make(
+  "building",
+  285,30,80,80,p
+ );
+
+ heli.style.background="#666";
+ heli.style.borderRadius="50%";
+ heli.style.color="white";
+ heli.style.fontSize="34px";
+ heli.textContent="H";
+
+ make("parking",25,210,180,140,p);
+ make("driveway",205,235,195,60,p);
+
+ solid(bx,by,45,45,230,150);
+}
+
+/* ==============================
+   POLICE
+============================== */
+
+function police(p,bx,by){
+
+ const b=make(
+  "building police",
+  25,25,220,140,p
+ );
+
+ addName(b,"🚓 POLICE");
+
+ make("parking",25,200,220,145,p);
+ make("driveway",245,245,155,55,p);
+
+ solid(bx,by,45,45,220,140);
+}
+
+/* ==============================
+   MALL
+============================== */
+
+function mall(p,bx,by){
+
+ const b=make(
+  "building mall",
+  25,25,340,145,p
+ );
+
+ addName(b,"🛍️ SHOPPING MALL");
+
+ make("parking",25,200,340,150,p);
+ make("driveway",365,235,35,70,p);
+
+ solid(bx,by,45,45,340,145);
+}
+
+/* ==============================
+   SCHOOL
+============================== */
+
+function school(p,bx,by){
+
+ const b=make(
+  "building school",
+  25,25,200,130,p
+ );
+
+ addName(b,"🏫 SCHOOL");
+
+ const field=make(
+  "building",
+  250,25,120,160,p
+ );
+
+ field.style.background="#4c9b51";
+ field.style.border="3px solid white";
+
+ make("parking",25,210,150,130,p);
+ make("driveway",175,245,225,50,p);
+
+ solid(bx,by,45,45,200,130);
+}
+
+/* ==============================
+   VILLA
+============================== */
+
+function villa(p,bx,by){
+
+ const b=make(
+  "building villa",
+  55,45,190,145,p
+ );
+
+ addName(b,"🏡 VILLA");
+
+ const pool=make(
+  "building",
+  275,45,90,145,p
+ );
+
+ pool.style.background="#55c5e5";
+ pool.style.border="4px solid white";
+
+ make("driveway",115,190,55,210,p);
+
+ const t1=make("tree",25,260,null,null,p);
+ t1.textContent="🌳";
+
+ const t2=make("tree",280,260,null,null,p);
+ t2.textContent="🌳";
+
+ solid(bx,by,75,65,190,145);
+}
+
+/* ==============================
+   APARTMENTS
+============================== */
+
+function apartments(p,bx,by){
+
+ const a=make(
+  "building apartment",
+  30,25,130,190,p
+ );
+
+ addName(a,"🏙️ TOWER A");
+
+ const b=make(
+  "building apartment",
+  205,25,130,190,p
+ );
+
+ addName(b,"🏙️ TOWER B");
+
+ make("parking",30,245,305,110,p);
+ make("driveway",335,270,65,55,p);
+
+ solid(bx,by,50,45,130,190);
+ solid(bx,by,225,45,130,190);
+}
+
+/* ==============================
+   GAS
+============================== */
+
+function gasStation(p,bx,by){
+
+ const shop=make(
+  "building gas",
+  25,25,150,100,p
+ );
+
+ addName(shop,"⛽ GAS");
+
+ const canopy=make(
+  "building",
+  220,30,145,180,p
+ );
+
+ canopy.style.background="#eee";
+ canopy.style.border="6px solid #d94141";
+
+ for(let i=0;i<3;i++){
+
+  const pump=make(
+   "building",
+   245,
+   55+i*50,
+   25,35,p
+  );
+
+  pump.style.background="#444";
+ }
+
+ make("driveway",0,240,400,100,p);
+
+ solid(bx,by,45,45,150,100);
+}
+
+/* ==============================
+   FIRE STATION
+============================== */
+
+function fireStation(p,bx,by){
+
+ const b=make(
+  "building fire",
+  35,30,300,145,p
+ );
+
+ addName(b,"🚒 FIRE STATION");
+
+ make("driveway",65,175,80,225,p);
+ make("driveway",220,175,80,225,p);
+
+ solid(bx,by,55,50,300,145);
+}
+
+/* ==============================
+   HOTEL
+============================== */
+
+function hotel(p,bx,by){
+
+ const b=make(
+  "building hotel",
+  45,25,280,170,p
+ );
+
+ addName(b,"🏨 HOTEL");
+
+ make("parking",25,230,160,120,p);
+
+ const pool=make(
+  "building",
+  220,235,120,90,p
+ );
+
+ pool.style.background="#50c3e3";
+ pool.style.border="4px solid white";
+
+ make("driveway",185,265,215,50,p);
+
+ solid(bx,by,65,45,280,170);
+}
+
+/* ==============================
+   SUPERMARKET
+============================== */
+
+function market(p,bx,by){
+
+ const b=make(
+  "building market",
+  30,25,320,120,p
+ );
+
+ addName(b,"🛒 SUPERMARKET");
+
+ make("parking",30,180,320,165,p);
+ make("driveway",350,225,50,70,p);
+
+ solid(bx,by,50,45,320,120);
+}
+
+/* ==============================
+   PROPERTY TYPES
+============================== */
+
+const TYPES=[
+ hospital,
+ police,
+ mall,
+ school,
+ villa,
+ apartments,
+ gasStation,
+ fireStation,
+ hotel,
+ market
+];
+
+/* ==============================
+   BLOCK GENERATOR
+============================== */
+
+function createBlock(bx,by){
+
+ const key=bx+","+by;
+
+ if(blocks.has(key))return;
+
+ const block=make(
+  "block",
+  bx*BLOCK,
+  by*BLOCK,
+  BLOCK,
+  BLOCK,
+  world
+ );
+
+ make(
+  "roadRight",
+  null,null,null,null,
+  block
+ );
+
+ make(
+  "roadBottom",
+  null,null,null,null,
+  block
+ );
+
+ const property=make(
+  "property",
+  null,null,null,null,
+  block
+ );
+
+ const type=
+ Math.floor(
+  random(bx,by,1)*
+  TYPES.length
+ );
+
+ TYPES[type](
+  property,
+  bx,
+  by
+ );
+
+ blocks.set(key,block);
+}
+
+function loadCity(){
+
+ const bx=Math.floor(playerX/BLOCK);
+ const by=Math.floor(playerY/BLOCK);
+
+ for(let x=bx-LOAD;x<=bx+LOAD;x++){
+
+  for(let y=by-LOAD;y<=by+LOAD;y++){
+
+   createBlock(x,y);
+  }
+ }
+}
+
+/* ==============================
+   BUILDING COLLISION
+============================== */
+
+function hitsBuilding(x,y){
+
+ const half=16;
+
+ for(const b of colliders){
+
+  if(Math.abs(b.x-x)>500)continue;
+  if(Math.abs(b.y-y)>500)continue;
+
+  if(
+   x+half>b.x &&
+   x-half<b.x+b.w &&
+   y+half>b.y &&
+   y-half<b.y+b.h
+  ){
+   return true;
+  }
+ }
+
+ return false;
+}
+
+/* ==============================
+   TRAFFIC
+============================== */
+
+const cars=[];
+
+const colors=[
+ "#2878d7",
+ "#f0c432",
+ "#eee",
+ "#222",
+ "#8d47aa",
+ "#ef812e",
+ "#35a37c"
+];
+
+function spawnAI(vertical,direction,distance){
+
+ const e=make(
+  "ai",
+  0,0,null,null,
+  world
+ );
+
+ e.style.background=
+ colors[
+  Math.floor(
+   Math.random()*colors.length
+  )
+ ];
+
+ let x;
+ let y;
+
+ if(vertical){
+
+  const road=
+  Math.floor(playerX/BLOCK);
+
+  x=
+  road*BLOCK+
+  (direction>0?485:555);
+
+  y=
+  playerY+
+  distance;
+
+ }else{
+
+  const road=
+  Math.floor(playerY/BLOCK);
+
+  y=
+  road*BLOCK+
+  (direction>0?485:555);
+
+  x=
+  playerX+
+  distance;
+ }
+
+ cars.push({
+  e,
+  x,
+  y,
+  vertical,
+  direction,
+  normalSpeed:55+Math.random()*30,
+  speed:55
+ });
+}
+
+/* SAFE TRAFFIC */
+
+spawnAI(true,1,700);
+spawnAI(true,1,1100);
+
+spawnAI(true,-1,-700);
+spawnAI(true,-1,-1100);
+
+spawnAI(false,1,750);
+spawnAI(false,1,1150);
+
+spawnAI(false,-1,-750);
+spawnAI(false,-1,-1150);
+
+/* ==============================
+   SMART TRAFFIC
+============================== */
+
+function updateCars(dt){
+
+ for(const car of cars){
+
+  let blocked=false;
+
+  /* PLAYER AHEAD */
+
+  if(car.vertical){
+
+   if(Math.abs(playerX-car.x)<42){
+
+    const ahead=
+    (playerY-car.y)*
+    car.direction;
+
+    if(
+     ahead>0 &&
+     ahead<220
+    ){
+     blocked=true;
+    }
+   }
+
+  }else{
+
+   if(Math.abs(playerY-car.y)<42){
+
+    const ahead=
+    (playerX-car.x)*
+    car.direction;
+
+    if(
+     ahead>0 &&
+     ahead<220
+    ){
+     blocked=true;
+    }
+   }
+  }
+
+  /* CAR AHEAD */
+
+  for(const other of cars){
+
+   if(other===car)continue;
+
+   if(
+    other.vertical!==
+    car.vertical
+   )continue;
+
+   if(car.vertical){
+
+    if(
+     Math.abs(
+      other.x-car.x
+     )<20
+    ){
+
+     const ahead=
+     (other.y-car.y)*
+     car.direction;
+
+     if(
+      ahead>0 &&
+      ahead<110
+     ){
+      blocked=true;
+     }
+    }
+
+   }else{
+
+    if(
+     Math.abs(
+      other.y-car.y
+     )<20
+    ){
+
+     const ahead=
+     (other.x-car.x)*
+     car.direction;
+
+     if(
+      ahead>0 &&
+      ahead<110
+     ){
+      blocked=true;
+     }
+    }
+   }
+  }
+
+  /* AI BRAKING */
+
+  if(blocked){
+   car.speed-=180*dt;
+  }else{
+   car.speed+=40*dt;
+  }
+
+  car.speed=
+  Math.max(
+   0,
+   Math.min(
+    car.normalSpeed,
+    car.speed
+   )
+  );
+
+  /* MOVE */
+
+  if(car.vertical){
+
+   car.y+=
+   car.direction*
+   car.speed*
+   dt;
+
+   car.e.style.transform=
+   car.direction>0
+   ?"rotate(180deg)"
+   :"rotate(0deg)";
+
+  }else{
+
+   car.x+=
+   car.direction*
+   car.speed*
+   dt;
+
+   car.e.style.transform=
+   car.direction>0
+   ?"rotate(90deg)"
+   :"rotate(-90deg)";
+  }
+
+  /* RECYCLE */
+
+  if(
+   Math.hypot(
+    car.x-playerX,
+    car.y-playerY
+   )>1800
+  ){
+
+   if(car.vertical){
+
+    const road=
+    Math.floor(playerX/BLOCK);
+
+    car.x=
+    road*BLOCK+
+    (car.direction>0?485:555);
+
+    car.y=
+    playerY-
+    car.direction*1200;
+
+   }else{
+
+    const road=
+    Math.floor(playerY/BLOCK);
+
+    car.y=
+    road*BLOCK+
+    (car.direction>0?485:555);
+
+    car.x=
+    playerX-
+    car.direction*1200;
+   }
+  }
+
+  car.e.style.left=
+  (car.x-20)+"px";
+
+  car.e.style.top=
+  (car.y-34)+"px";
+ }
+}
+
+/* ==============================
+   PLAYER VS CAR
+============================== */
+
+function hitsCar(x,y){
+
+ for(const car of cars){
+
+  if(
+   Math.abs(x-car.x)<32 &&
+   Math.abs(y-car.y)<45
+  ){
+   return true;
+  }
+ }
+
+ return false;
+}
+
+/* ==============================
+   CRASH
+============================== */
+
+let crashTimer;
+
+function showCrash(){
+
+ crashText.classList.add("show");
+
+ clearTimeout(crashTimer);
+
+ crashTimer=setTimeout(
+  ()=>{
+   crashText.classList.remove("show");
+  },
+  400
+ );
+}
+
+/* ==============================
+   CONTROLS
+============================== */
+
+function hold(id,start,stop){
+
+ const button=
+ document.getElementById(id);
+
+ button.addEventListener(
+  "pointerdown",
+  e=>{
+   e.preventDefault();
+
+   try{
+    button.setPointerCapture(
+     e.pointerId
+    );
+   }catch{}
+
+   start();
+  }
+ );
+
+ button.addEventListener(
+  "pointerup",
+  e=>{
+   e.preventDefault();
+   stop();
+  }
+ );
+
+ button.addEventListener(
+  "pointercancel",
+  stop
+ );
+}
+
+hold(
+ "go",
+ ()=>gas=true,
+ ()=>gas=false
+);
+
+hold(
+ "reverse",
+ ()=>reverse=true,
+ ()=>reverse=false
+);
+
+hold(
+ "left",
+ ()=>left=true,
+ ()=>left=false
+);
+
+hold(
+ "right",
+ ()=>right=true,
+ ()=>right=false
+);
+
+/* KEYBOARD */
+
+document.addEventListener(
+ "keydown",
+ e=>{
+
+  if(e.key==="ArrowUp")
+   gas=true;
+
+  if(e.key==="ArrowDown")
+   reverse=true;
+
+  if(e.key==="ArrowLeft")
+   left=true;
+
+  if(e.key==="ArrowRight")
+   right=true;
+ }
+);
+
+document.addEventListener(
+ "keyup",
+ e=>{
+
+  if(e.key==="ArrowUp")
+   gas=false;
+
+  if(e.key==="ArrowDown")
+   reverse=false;
+
+  if(e.key==="ArrowLeft")
+   left=false;
+
+  if(e.key==="ArrowRight")
+   right=false;
+ }
+);
+
+/* ==============================
+   GAME LOOP
+============================== */
+
+let last=
+performance.now();
+
+function gameLoop(time){
+
+ const dt=
+ Math.min(
+  .04,
+  (time-last)/1000
+ );
+
+ last=time;
+
+ /* ==========================
+    FORWARD
+ ========================== */
+
+ if(gas){
+
+  /*
+   If reversing, GO acts
+   as the brake first.
+  */
+
+  if(speed<0){
+
+   speed+=130*dt;
+
+   if(speed>0)
+    speed=0;
+
+  }else{
+
+   speed+=75*dt;
+  }
+ }
+
+ /* ==========================
+    BRAKE + REVERSE
+ ========================== */
+
+ if(reverse){
+
+  /*
+   If going forward:
+   BRAKE first.
+
+   Once speed reaches zero:
+   continue into reverse.
+  */
+
+  if(speed>0){
+
+   speed-=130*dt;
+
+   if(speed<0)
+    speed=0;
+
+  }else{
+
+   speed-=55*dt;
+  }
+ }
+
+ /* ==========================
+    NATURAL FRICTION
+ ========================== */
+
+ if(!gas&&!reverse){
+
+  if(speed>0){
+
+   speed-=9*dt;
+
+   if(speed<0)
+    speed=0;
+
+  }else if(speed<0){
+
+   speed+=9*dt;
+
+   if(speed>0)
+    speed=0;
+  }
+ }
+
+ /* SPEED LIMITS */
+
+ speed=
+ Math.max(
+  -45,
+  Math.min(
+   150,
+   speed
+  )
+ );
+
+ /* ==========================
+    STEERING
+ ========================== */
+
+ if(
+  Math.abs(speed)>.5
+ ){
+
+  const turn=
+  (
+   65+
+   Math.abs(speed)*.25
+  )*dt;
+
+  /*
+   Steering reverses while
+   backing up.
+  */
+
+  const direction=
+  speed>=0
+  ?1
+  :-1;
+
+  if(left)
+   angle-=turn*direction;
+
+  if(right)
+   angle+=turn*direction;
+ }
+
+ /* ==========================
+    MOVEMENT
+ ========================== */
+
+ const radians=
+ angle*
+ Math.PI/180;
+
+ const nextX=
+ playerX+
+ Math.sin(radians)*
+ speed*
+ dt*
+ 2.3;
+
+ const nextY=
+ playerY-
+ Math.cos(radians)*
+ speed*
+ dt*
+ 2.3;
+
+ /* ==========================
+    COLLISION
+ ========================== */
+
+ if(
+  hitsBuilding(nextX,nextY)
+  ||
+  hitsCar(nextX,nextY)
+ ){
+
+  /*
+   Stop but DO NOT trap
+   the player.
+
+   They can reverse away.
+  */
+
+  speed=0;
+
+  showCrash();
+
+ }else{
+
+  playerX=nextX;
+  playerY=nextY;
+ }
+
+ /* CITY */
+
+ loadCity();
+
+ /* TRAFFIC */
+
+ updateCars(dt);
+
+ /* CAMERA */
+
+ world.style.transform=
+ `translate3d(
+ ${innerWidth/2-playerX}px,
+ ${innerHeight/2-playerY}px,
+ 0
+ )`;
+
+ player.style.transform=
+ `rotate(${angle}deg)`;
+
+ /* ==========================
+    HUD
+ ========================== */
+
+ speedText.textContent=
+ Math.abs(
+  Math.round(speed)
+ );
+
+ if(speed<-.5){
+
+  gearText.textContent=
+  "R ↩️";
+
+ }else if(speed>.5){
+
+  gearText.textContent=
+  "D ▲";
+
+ }else{
+
+  gearText.textContent=
+  "STOP";
+ }
+
+ const district=
+ Math.abs(
+  Math.floor(playerX/BLOCK)+
+  Math.floor(playerY/BLOCK)
+ )%5;
+
+ districtText.textContent=
+ [
+  "🏙️ CITY CENTRE",
+  "🏡 RESIDENTIAL",
+  "🛍️ SHOPPING DISTRICT",
+  "🏢 BUSINESS DISTRICT",
+  "🏥 MEDICAL DISTRICT"
+ ][district];
+
+ requestAnimationFrame(
+  gameLoop
+ );
+}
+
+/* ==============================
+   START
+============================== */
+
+loadCity();
+
+requestAnimationFrame(
+ gameLoop
+);
+
+</script>
+
+</body>
+</html>
